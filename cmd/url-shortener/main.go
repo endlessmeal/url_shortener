@@ -1,9 +1,12 @@
 package main
 
 import (
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"log/slog"
 	"os"
 	"url_shortener/internal/config"
+	mwLogger "url_shortener/internal/http-server/middleware/logger"
 	"url_shortener/internal/lib/logger/sl"
 	"url_shortener/internal/storage/sqlite"
 )
@@ -26,6 +29,12 @@ func main() {
 		slog.Error("failed to init database: %s", sl.Err(err))
 		os.Exit(1)
 	}
+	router := chi.NewRouter()
+	router.Use(middleware.RequestID)
+	router.Use(middleware.Logger)
+	router.Use(mwLogger.New(log))
+	router.Use(middleware.Recoverer)
+	router.Use(middleware.URLFormat)
 
 	_ = storage
 }
